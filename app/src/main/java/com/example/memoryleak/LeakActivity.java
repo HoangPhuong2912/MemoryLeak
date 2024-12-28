@@ -60,12 +60,15 @@ public class LeakActivity extends Activity implements View.OnClickListener {
         }
     }
 
-
+    /*Singleton khởi tạo bằng context của Activity, dẫn đến việc giữ một tham chiếu mạnh
+    ngăn Activity được thu gom rác (Garbage Collection) khi nó bị hủy (destroyed).*/
     private void leakSingleton() {
         single = SingleDemo.getInstance(this);
         Toast.makeText(this,"Singleton context leak",Toast.LENGTH_SHORT).show();
     }
 
+    //staticView được khởi tạo và giữ tham chiếu đến LeakActivity.
+    //staticActivity giữ một tham chiếu mạnh đến Activity hiện tại.
     private void leakStatic() {
 
         staticView = new TextView(LeakActivity.this);
@@ -77,6 +80,8 @@ public class LeakActivity extends Activity implements View.OnClickListener {
         Toast.makeText(this,"Static leak",Toast.LENGTH_SHORT).show();
     }
 
+    /*SomeInnerClass được khởi tạo và giữ tham chiếu tĩnh, là một inner class của LeakActivity,
+    nó sẽ ngầm giữ một tham chiếu mạnh đến LeakActivity, gây ra memory leak.*/
     private void leakStaticInnerClass() {
         if (someInnerClass == null) {
             someInnerClass = new SomeInnerClass();
@@ -85,6 +90,9 @@ public class LeakActivity extends Activity implements View.OnClickListener {
 
     }
 
+    //LeakedThread chạy vô hạn và giữ một tham chiếu đến Activity.
+    //Handler trong mLeakyHandler cũng có thể gây ra leak vì nó giữ tham chiếu ngầm đến Activity.
+    //AsyncTask chạy trong background mà không bao giờ hoàn thành dẫn đến việc giữ tham chiếu đến Activity.
     private void leakThread() {
         //thread
         mThread = new LeakedThread();

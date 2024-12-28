@@ -16,13 +16,12 @@ import androidx.annotation.Nullable;
 @SuppressWarnings("deprecation")
 public class LeakFixActivity extends Activity implements View.OnClickListener {
 
-    // FIXED: remove static keywords
     TextView staticView;
     Activity staticActivity = null;
     SomeInnerClass someInnerClass;
 
     String InnerClassParam = "Static class holds external references";
-    //single
+    //singleton
     SingleDemo single = null;
 
     //handler
@@ -32,7 +31,7 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
     //thread
     private LeakedThread mThread;
 
-    //Task
+    //task
     private DoNothingTask doNothingTask = null;
 
 
@@ -51,13 +50,14 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
 
-        // FIXED: unregister it onDestroy
+
+        // unregister Activity out of Singleton.
         single.unRegister(this);
-        // FIXED: kill the thread in activity onDestroy
+        // kill the thread in activity onDestroy
         mThread.interrupt();
-        // FIXED: remove callback in activity onDestroy
+        // remove callback in activity onDestroy
         mLeakyHandler.removeCallbacks(myRunnable);
-        // FIXED: should cancel the task in activity onDestroy()
+        // cancel the task in activity onDestroy()
         doNothingTask.cancel(true);
 
     }
@@ -77,6 +77,7 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
     }
 
     private void leakSingleton() {
+        //use Application Context instead of Activity Context
         single = SingleDemo.getInstance(this);
         Toast.makeText(this,"Singleton context leak------fixed",Toast.LENGTH_SHORT).show();
 
@@ -116,23 +117,23 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
 
     }
 
-
+    //make SomeInnerClass static nested class
     class SomeInnerClass {
     }
 
 
-    // FIXED: make it static. So it does not have referenced to the containing activity class
+    // make it static. So it does not have referenced to the containing activity class
     private static class LeakedThread extends Thread {
         @Override
         public void run() {
-            // FIXED: check interrupted before the next loop
+            // Thêm kiểm tra trạng thái để dừng Thread đúng cách
             while (!isInterrupted()) {
                 SystemClock.sleep(10000);
             }
         }
     }
 
-    // FIXED: use static class instead of inner class. static class does not have reference to the containing activity
+    // use static class instead of inner class. static class does not have reference to the containing activity
     private static class MyHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -140,7 +141,7 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    // FIXED: use static class instead of inner class. static class does not have reference to the containing activity
+    // use static class instead of inner class. static class does not have reference to the containing activity
     private static class MyRunnable implements Runnable {
         @Override
         public void run() {
@@ -152,7 +153,7 @@ public class LeakFixActivity extends Activity implements View.OnClickListener {
     private static class DoNothingTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            // FIXED: should check if cancelled before next loop
+            // should check if cancelled before next loop
             while (!isCancelled()) {
                 SystemClock.sleep(1000);
             }
